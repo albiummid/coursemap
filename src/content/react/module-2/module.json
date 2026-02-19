@@ -1,0 +1,9 @@
+{
+  "id": "module-2",
+  "title": "Advanced Concepts",
+  "slug": "module-2",
+  "order": 2,
+  "isLocked": false,
+  "unlockAfterModuleId": null,
+  "description": "Deeper dive into React."
+}

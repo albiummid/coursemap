@@ -6,10 +6,29 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+
+// Components
 import Sidebar from '@/components/Sidebar';
 import SearchModal from '@/components/SearchModal';
 import LessonPage from '@/components/LessonPage';
 import NotFound from '@/components/NotFound';
+import AdminGuard from '@/components/AdminGuard';
+
+// Playground
+import PlaygroundModal from '@/playground/PlaygroundModal';
+import PlaygroundFloat from '@/playground/PlaygroundFloat';
+
+// Admin Pages
+import AdminLayout from '@/admin/AdminLayout';
+import Dashboard from '@/admin/Dashboard';
+import CourseManager from '@/admin/CourseManager';
+import CourseEditor from '@/admin/CourseEditor';
+import ZIPImporter from '@/admin/ZIPImporter';
+import Users from '@/admin/Users';
+import Settings from '@/admin/Settings';
+import LoginPage from '@/admin/LoginPage';
+
+// Utils
 import { getCourseTree } from '@/utils/contentLoader';
 
 /* ─── Layout ─── */
@@ -41,6 +60,10 @@ function Layout(): ReactNode {
         </AnimatePresence>
       </main>
       <SearchModal isOpen={searchOpen} onClose={closeSearch} />
+      
+      {/* Playground System */}
+      <PlaygroundFloat />
+      <PlaygroundModal />
     </div>
   );
 }
@@ -83,6 +106,48 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: '/admin/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/admin',
+    element: (
+      <AdminGuard>
+        <AdminLayout />
+      </AdminGuard>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: 'courses',
+        element: <CourseManager />,
+      },
+      {
+        path: 'courses/:courseId',
+        element: <CourseEditor />,
+      },
+      {
+        path: 'courses/new',
+        element: <CourseEditor />,
+      },
+      {
+        path: 'import',
+        element: <ZIPImporter />,
+      },
+      {
+        path: 'users',
+        element: <Users />,
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
+      },
+    ],
+  },
 ]);
 
 /* ─── App ─── */
@@ -90,3 +155,4 @@ const router = createBrowserRouter([
 export default function App(): ReactNode {
   return <RouterProvider router={router} />;
 }
+

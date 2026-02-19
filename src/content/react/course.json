@@ -1,0 +1,17 @@
+{
+  "id": "react-basics",
+  "title": "React Basics",
+  "slug": "react",
+  "description": "Learn the fundamentals of React.",
+  "version": "1.0.0",
+  "author": "Antigravity",
+  "tags": ["react", "frontend"],
+  "language": "en",
+  "totalModules": 1,
+  "estimatedHours": 5,
+  "isPublished": true,
+  "inviteOnly": false,
+  "allowedEmails": [],
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2025-01-01T00:00:00Z"
+}

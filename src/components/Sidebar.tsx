@@ -24,21 +24,17 @@ interface SidebarProps {
 
 interface ModuleAccordionProps {
   module: Module;
-  courseSlug: string;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
 function ModuleAccordion({
   module,
-  courseSlug,
   isExpanded,
   onToggle,
 }: ModuleAccordionProps): ReactNode {
   const { isComplete, getModuleProgress } = useProgressStore();
-  const lessonIds = module.lessons.map(
-    (l) => `${courseSlug}/${module.slug}/${l.slug}`
-  );
+  const lessonIds = module.lessons.map((l) => l.path);
   const progress = getModuleProgress(lessonIds);
   const completedCount = lessonIds.filter((id) => isComplete(id)).length;
 
@@ -84,8 +80,7 @@ function ModuleAccordion({
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {module.lessons.map((lesson) => {
-              const lessonId = `${courseSlug}/${module.slug}/${lesson.slug}`;
-              const completed = isComplete(lessonId);
+              const completed = isComplete(lesson.path);
               return (
                 <li key={lesson.slug}>
                   <NavLink
@@ -183,7 +178,6 @@ function CourseSection({ course }: CourseSectionProps): ReactNode {
           <ModuleAccordion
             key={mod.slug}
             module={mod}
-            courseSlug={course.slug}
             isExpanded={expandedModules[mod.slug] ?? false}
             onToggle={() => toggleModule(mod.slug)}
           />

@@ -1,16 +1,21 @@
 import type { Course, CourseTree, Lesson, LessonFrontmatter, LessonNavigation, Module, SearchItem } from '@/types';
 
-/* ─── Load all markdown files eagerly ─── */
+/* ─── Load all content eagerly ─── */
 
 const markdownFiles: Record<string, string> = import.meta.glob(
   '../content/**/*.md',
   { eager: true, query: '?raw', import: 'default' }
 ) as Record<string, string>;
 
+const jsonFiles: Record<string, any> = import.meta.glob(
+  '../content/**/*.json',
+  { eager: true, import: 'default' }
+) as Record<string, any>;
+
 /* ─── Lightweight Frontmatter Parser (browser-safe) ─── */
 
 interface ParsedMarkdown {
-  data: Record<string, unknown>;
+  data: Record<string, any>;
   content: string;
 }
 
@@ -21,7 +26,7 @@ function parseYamlFrontmatter(raw: string): ParsedMarkdown {
   }
   const yamlBlock = match[1] ?? '';
   const content = match[2] ?? '';
-  const data: Record<string, unknown> = {};
+  const data: Record<string, any> = {};
 
   for (const line of yamlBlock.split('\n')) {
     const trimmed = line.trim();
@@ -31,7 +36,7 @@ function parseYamlFrontmatter(raw: string): ParsedMarkdown {
     if (colonIdx === -1) continue;
 
     const key = trimmed.slice(0, colonIdx).trim();
-    let value: unknown = trimmed.slice(colonIdx + 1).trim();
+    let value: any = trimmed.slice(colonIdx + 1).trim();
 
     // Remove surrounding quotes
     if (typeof value === 'string' && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
@@ -51,6 +56,10 @@ function parseYamlFrontmatter(raw: string): ParsedMarkdown {
     if (typeof value === 'string' && /^\d+$/.test(value)) {
       value = parseInt(value, 10);
     }
+
+    // Parse booleans
+    if (value === 'true') value = true;
+    if (value === 'false') value = false;
 
     // Handle optional comment suffix (e.g., # optional)
     if (typeof value === 'string') {
@@ -72,94 +81,112 @@ function slugify(segment: string): string {
   return segment.replace(/\s+/g, '-').toLowerCase();
 }
 
-function titleFromSlug(slug: string): string {
-  return slug
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c: string) => c.toUpperCase());
-}
-
 function parseFrontmatter(raw: string): { frontmatter: LessonFrontmatter; content: string } {
   const { data, content } = parseYamlFrontmatter(raw);
   return {
     frontmatter: {
       title: (data.title as string) ?? 'Untitled',
-      duration: (data.duration as string) ?? '5 min',
+      slug: (data.slug as string) ?? 'untitled',
       order: (data.order as number) ?? 0,
+      duration: (data.duration as string) ?? '5 min',
       tags: (data.tags as string[]) ?? [],
-      videoUrl: data.videoUrl as string | undefined,
       description: (data.description as string) ?? '',
+      videoUrl: data.videoUrl as string | undefined,
+      playgroundLang: data.playgroundLang as string | undefined,
+      playgroundCode: data.playgroundCode as string | undefined,
+      isPublished: (data.isPublished as boolean) ?? true,
+      isFree: (data.isFree as boolean) ?? false,
     },
-    content,
+    content: content.trim(),
   };
 }
 
 /* ─── Build the course tree ─── */
 
 export function buildCourseTree(): CourseTree {
-  const courseMap = new Map<string, Map<string, Lesson[]>>();
+  const courseMap = new Map<string, Course>();
+  const moduleMap = new Map<string, Map<string, Module>>();
 
+  // 1. Process course.json files
+  for (const [filePath, data] of Object.entries(jsonFiles)) {
+    const courseMatch = filePath.match(/content\/(.+?)\/course\.json$/);
+    if (courseMatch) {
+      const courseSlug = courseMatch[1]!;
+      courseMap.set(courseSlug, {
+        ...data,
+        slug: courseSlug,
+        modules: [],
+      });
+      moduleMap.set(courseSlug, new Map());
+      continue;
+    }
+  }
+
+  // 2. Process module.json files
+  for (const [filePath, data] of Object.entries(jsonFiles)) {
+    const moduleMatch = filePath.match(/content\/(.+?)\/(.+?)\/module\.json$/);
+    if (moduleMatch) {
+      const [, courseSlug, moduleSlug] = moduleMatch;
+      const courseModules = moduleMap.get(courseSlug!);
+      if (courseModules) {
+        courseModules.set(moduleSlug!, {
+          ...data,
+          slug: moduleSlug!,
+          lessons: [],
+        });
+      }
+      continue;
+    }
+  }
+
+  // 3. Process markdown files
   for (const [filePath, rawContent] of Object.entries(markdownFiles)) {
-    // filePath looks like: ../content/react/module-1/lesson-1.md or similar
-    // We want content/<course>/<module>/<lesson>.md
     const pathMatch = filePath.match(/content\/(.+?)\/(.+?)\/(.+?)\.md$/);
     if (!pathMatch) continue;
 
-    const [, courseRaw, moduleRaw, lessonRaw] = pathMatch;
-    const courseSlug = slugify(courseRaw!);
-    const moduleSlug = slugify(moduleRaw!);
-    const lessonSlug = slugify(lessonRaw!);
-    
-    const { frontmatter } = parseFrontmatter(rawContent);
+    const [, courseSlug, moduleSlug, lessonSlug] = pathMatch;
+    const { frontmatter, content } = parseFrontmatter(rawContent);
 
     const lesson: Lesson = {
-      slug: lessonSlug,
+      slug: lessonSlug!,
       path: `/courses/${courseSlug}/${moduleSlug}/${lessonSlug}`,
       rawContent,
+      content,
       frontmatter,
-      moduleSlug,
-      courseSlug,
+      moduleSlug: moduleSlug!,
+      courseSlug: courseSlug!,
     };
 
-    if (!courseMap.has(courseSlug)) {
-      courseMap.set(courseSlug, new Map());
+    const courseModules = moduleMap.get(courseSlug!);
+    if (courseModules) {
+      const mod = courseModules.get(moduleSlug!);
+      if (mod) {
+        mod.lessons.push(lesson);
+      }
     }
-    const moduleMap = courseMap.get(courseSlug)!;
-    if (!moduleMap.has(moduleSlug)) {
-      moduleMap.set(moduleSlug, []);
-    }
-    moduleMap.get(moduleSlug)!.push(lesson);
   }
 
-  const courses: Course[] = [];
+  // Assemble the tree
+  const finalCourses: Course[] = [];
 
-  for (const [courseSlug, moduleMap] of courseMap) {
-    const modules: Module[] = [];
-
-    for (const [moduleSlug, lessons] of moduleMap) {
-      const sortedLessons = lessons.sort((a, b) => a.frontmatter.order - b.frontmatter.order);
-      const minOrder = sortedLessons[0]?.frontmatter.order ?? 0;
-
-      modules.push({
-        slug: moduleSlug,
-        title: titleFromSlug(moduleSlug),
-        order: minOrder,
-        lessons: sortedLessons,
-      });
+  for (const [courseSlug, course] of courseMap) {
+    const courseModules = moduleMap.get(courseSlug);
+    if (courseModules) {
+      const modules = Array.from(courseModules.values())
+        .sort((a, b) => a.order - b.order)
+        .map(mod => ({
+          ...mod,
+          lessons: mod.lessons.sort((a, b) => a.frontmatter.order - b.frontmatter.order)
+        }));
+      
+      course.modules = modules;
     }
-
-    modules.sort((a, b) => a.order - b.order);
-
-    courses.push({
-      slug: courseSlug,
-      title: titleFromSlug(courseSlug),
-      modules,
-    });
+    finalCourses.push(course);
   }
 
-  courses.sort((a, b) => a.title.localeCompare(b.title));
-
-  return { courses };
+  return { courses: finalCourses.sort((a, b) => a.title.localeCompare(b.title)) };
 }
+
 
 /* ─── Get a flat list of all lessons for a course ─── */
 

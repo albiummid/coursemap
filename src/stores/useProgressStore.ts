@@ -8,43 +8,39 @@ export const useProgressStore = create<ProgressStore>()(
       completedLessons: {},
       lastVisited: null,
 
-      toggleComplete: (lessonId: string): void => {
+      toggleComplete: (lessonPath: string): void => {
         set((state) => {
           const updated = { ...state.completedLessons };
-          if (updated[lessonId]) {
-            delete updated[lessonId];
+          if (updated[lessonPath]) {
+            delete updated[lessonPath];
           } else {
-            updated[lessonId] = true;
+            updated[lessonPath] = true;
           }
           return { completedLessons: updated };
         });
       },
 
-      isComplete: (lessonId: string): boolean => {
-        return get().completedLessons[lessonId] === true;
+      isComplete: (lessonPath: string): boolean => {
+        return get().completedLessons[lessonPath] === true;
       },
 
       getCourseProgress: (lessonIds: string[]): number => {
         if (lessonIds.length === 0) return 0;
-        const completed = lessonIds.filter(
-          (id) => get().completedLessons[id] === true
-        ).length;
-        return Math.round((completed / lessonIds.length) * 100);
+        const completedCount = lessonIds.filter((id) => get().isComplete(id)).length;
+        return Math.round((completedCount / lessonIds.length) * 100);
       },
 
       getModuleProgress: (lessonIds: string[]): number => {
         if (lessonIds.length === 0) return 0;
-        const completed = lessonIds.filter(
-          (id) => get().completedLessons[id] === true
-        ).length;
-        return Math.round((completed / lessonIds.length) * 100);
+        const completedCount = lessonIds.filter((id) => get().isComplete(id)).length;
+        return Math.round((completedCount / lessonIds.length) * 100);
       },
 
-      resetCourse: (courseId: string): void => {
+      resetCourse: (courseSlug: string): void => {
         set((state) => {
           const updated = { ...state.completedLessons };
           for (const key of Object.keys(updated)) {
-            if (key.startsWith(courseId)) {
+            if (key.includes(`/courses/${courseSlug}/`)) {
               delete updated[key];
             }
           }
@@ -53,7 +49,8 @@ export const useProgressStore = create<ProgressStore>()(
       },
     }),
     {
-      name: 'coursemap-progress',
+      name: 'lms:progress',
     }
   )
 );
+

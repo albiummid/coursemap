@@ -1,9 +1,12 @@
 ---
-title: "Introduction to React Hooks"
-duration: "12 min"
+title: "Introduction to React"
+slug: "lesson-1"
 order: 1
-tags: ["hooks", "state", "beginner"]
-description: "Learn what React Hooks are, why they exist, and how they changed the way we write React components."
+duration: "5 min"
+tags: ["react", "intro"]
+description: "Welcome to the world of React."
+isPublished: true
+isFree: true
 ---
 
 ## What Are React Hooks?

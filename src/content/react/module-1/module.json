@@ -1,0 +1,9 @@
+{
+  "id": "module-1",
+  "title": "Getting Started",
+  "slug": "module-1",
+  "order": 1,
+  "isLocked": false,
+  "unlockAfterModuleId": null,
+  "description": "Initial steps into React."
+}

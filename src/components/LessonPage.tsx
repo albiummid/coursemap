@@ -18,12 +18,6 @@ import TableOfContents from '@/components/TableOfContents';
 import ProgressBar from '@/components/ProgressBar';
 import type { LessonFrontmatter } from '@/types';
 
-/* ─── Helpers ─── */
-
-function extractMarkdownContent(raw: string): string {
-  const match = /^---\r?\n[\s\S]*?\r?\n---\r?\n([\s\S]*)$/.exec(raw.trim());
-  return match?.[1] ?? raw;
-}
 
 /* ─── Component ─── */
 
@@ -38,32 +32,34 @@ export default function LessonPage(): ReactNode {
   const tree = useMemo(() => getCourseTree(), []);
 
   const currentPath = `/courses/${course}/${mod}/${lessonSlug}`;
-  const lessonId = `${course}/${mod}/${lessonSlug}`;
 
   // Find lesson in tree using parameters
   const lessonData = useMemo(() => {
     return getLessonByParams(tree, course, mod, lessonSlug);
   }, [tree, course, mod, lessonSlug]);
 
-  // Use already-parsed frontmatter from content loader, extract body
+  // Use already-parsed frontmatter from content loader
   const { frontmatter, content } = useMemo(() => {
     if (!lessonData) {
       return {
         frontmatter: {
           title: 'Not Found',
-          duration: '',
+          slug: 'not-found',
           order: 0,
+          duration: '',
           tags: [],
           description: '',
+          isPublished: false,
         } satisfies LessonFrontmatter,
         content: '',
       };
     }
     return {
       frontmatter: lessonData.frontmatter,
-      content: extractMarkdownContent(lessonData.rawContent),
+      content: lessonData.content,
     };
   }, [lessonData]);
+
 
   // Navigation
   const { prev, next } = useMemo(
@@ -71,16 +67,25 @@ export default function LessonPage(): ReactNode {
     [tree, currentPath]
   );
 
-  const completed = isComplete(lessonId);
+  const completed = isComplete(currentPath);
 
   const handleToggleComplete = useCallback((): void => {
-    toggleComplete(lessonId);
-  }, [toggleComplete, lessonId]);
+    toggleComplete(currentPath);
+  }, [toggleComplete, currentPath]);
 
-  // Set last visited
+  // Set last visited & auto-open playground if configured
   useEffect(() => {
     useProgressStore.setState({ lastVisited: currentPath });
-  }, [currentPath]);
+    
+    if (frontmatter.playgroundLang) {
+      import('@/stores/usePlaygroundStore').then(m => {
+        m.usePlaygroundStore.getState().open({
+          lang: frontmatter.playgroundLang,
+          code: frontmatter.playgroundCode
+        });
+      });
+    }
+  }, [currentPath, frontmatter.playgroundLang, frontmatter.playgroundCode]);
 
   // Keyboard shortcuts for prev/next
   useEffect(() => {
