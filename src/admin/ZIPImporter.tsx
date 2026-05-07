@@ -64,18 +64,18 @@ export default function ZIPImporter() {
             const raw = await courseJsonEntry.async('string');
             const parsed = JSON.parse(raw);
             const validation = CourseSchema.safeParse(parsed);
-          if (validation.success) {
-            courseName = validation.data.title;
-          } else {
-            errors.push(
-              `course.json validation: ${validation.error.issues
-                .map((issue: { message: string }) => issue.message)
-                .join(', ')}`
-            );
+            if (validation.success) {
+              courseName = validation.data.title;
+            } else {
+              errors.push(
+                `course.json validation: ${validation.error.issues
+                  .map((issue: { message: string }) => issue.message)
+                  .join(', ')}`
+              );
+            }
           }
-          }
-          }
-        } catch {
+        }
+        catch {
           errors.push('course.json could not be parsed as JSON');
         }
       } else {
@@ -83,7 +83,7 @@ export default function ZIPImporter() {
       }
 
       // Discover modules and lessons
-      const dirs = Object.keys(zip.files).filter((p) => zip.files[p].dir);
+      const dirs = Object.keys(zip.files).filter((p) => zip.files[p]?.dir);
       const moduleDirs = dirs.filter((d) => {
         const parts = d.split('/').filter(Boolean);
         return parts.length === 2;
