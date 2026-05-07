@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, type ReactNode } from 'react';
+import { useState, useMemo, useCallback, useEffect, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -28,39 +28,61 @@ export default function LessonPage(): ReactNode {
     lesson: string;
   }>();
   const navigate = useNavigate();
-  const { isComplete, toggleComplete } = useProgressStore();
-  const tree = useMemo(() => getCourseTree(), []);
+  const [contentData, setContentData] = useState<{
+    frontmatter: LessonFrontmatter;
+    content: string;
+    loading: boolean;
+  }>({
+    frontmatter: {
+      title: 'Loading...',
+      slug: '',
+      order: 0,
+      duration: '',
+      tags: [],
+      description: '',
+      isPublished: true,
+    },
+    content: '',
+    loading: true,
+  });
 
+  const tree = useMemo(() => getCourseTree(), []);
   const currentPath = `/courses/${course}/${mod}/${lessonSlug}`;
 
-  // Find lesson in tree using parameters
-  const lessonData = useMemo(() => {
+  // Find lesson metadata in tree
+  const lessonMeta = useMemo(() => {
     return getLessonByParams(tree, course, mod, lessonSlug);
   }, [tree, course, mod, lessonSlug]);
 
-  // Use already-parsed frontmatter from content loader
-  const { frontmatter, content } = useMemo(() => {
-    if (!lessonData) {
-      return {
-        frontmatter: {
-          title: 'Not Found',
-          slug: 'not-found',
-          order: 0,
-          duration: '',
-          tags: [],
-          description: '',
-          isPublished: false,
-        } satisfies LessonFrontmatter,
-        content: '',
-      };
-    }
-    return {
-      frontmatter: lessonData.frontmatter,
-      content: lessonData.content,
-    };
-  }, [lessonData]);
+  // Load actual content
+  useEffect(() => {
+    let isMounted = true;
+    if (!course || !mod || !lessonSlug) return;
+
+    setContentData(prev => ({ ...prev, loading: true }));
+
+    import('@/utils/contentLoader').then(async (m) => {
+      try {
+        const data = await m.getLessonContent(course, mod, lessonSlug);
+        if (isMounted) {
+          setContentData({ ...data, loading: false });
+        }
+      } catch (err) {
+        console.error('Failed to load lesson content:', err);
+        if (isMounted) {
+          setContentData(prev => ({ ...prev, loading: false }));
+        }
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [course, mod, lessonSlug]);
+
+  const { frontmatter, content, loading } = contentData;
 
 
+  const { isComplete, toggleComplete } = useProgressStore();
+  
   // Navigation
   const { prev, next } = useMemo(
     () => getLessonNavigation(tree, currentPath),
@@ -75,6 +97,7 @@ export default function LessonPage(): ReactNode {
 
   // Set last visited & auto-open playground if configured
   useEffect(() => {
+    if (loading) return;
     useProgressStore.setState({ lastVisited: currentPath });
     
     if (frontmatter.playgroundLang) {
@@ -85,7 +108,7 @@ export default function LessonPage(): ReactNode {
         });
       });
     }
-  }, [currentPath, frontmatter.playgroundLang, frontmatter.playgroundCode]);
+  }, [currentPath, frontmatter.playgroundLang, frontmatter.playgroundCode, loading]);
 
   // Keyboard shortcuts for prev/next
   useEffect(() => {
@@ -106,7 +129,7 @@ export default function LessonPage(): ReactNode {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPath]);
 
-  if (!lessonData) {
+  if (!lessonMeta && !loading) {
     return (
       <div className="lesson-not-found">
         <h2>Lesson not found</h2>
@@ -118,6 +141,15 @@ export default function LessonPage(): ReactNode {
         >
           Go Home
         </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="lesson-loading">
+        <div className="skeleton-header" />
+        <div className="skeleton-content" />
       </div>
     );
   }

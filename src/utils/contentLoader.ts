@@ -1,14 +1,16 @@
 import type { Course, CourseTree, Lesson, LessonFrontmatter, LessonNavigation, Module, SearchItem } from '@/types';
 
-/* ─── Load all content eagerly ─── */
+/* ─── Load all content ─── */
 
-const markdownFiles: Record<string, string> = import.meta.glob(
-  '../content/**/*.md',
-  { eager: true, query: '?raw', import: 'default' }
-) as Record<string, string>;
+// Lazy load markdown (heavy)
+const markdownLoaders: Record<string, () => Promise<string>> = import.meta.glob(
+  '../../content/**/*.md',
+  { eager: false, query: '?raw', import: 'default' }
+) as Record<string, () => Promise<string>>;
 
+// Eager load JSON (light metadata)
 const jsonFiles: Record<string, any> = import.meta.glob(
-  '../content/**/*.json',
+  '../../content/**/*.json',
   { eager: true, import: 'default' }
 ) as Record<string, any>;
 
@@ -139,20 +141,29 @@ export function buildCourseTree(): CourseTree {
     }
   }
 
-  // 3. Process markdown files
-  for (const [filePath, rawContent] of Object.entries(markdownFiles)) {
+  // 3. Process markdown files (metadata only)
+  for (const filePath of Object.keys(markdownLoaders)) {
     const pathMatch = filePath.match(/content\/(.+?)\/(.+?)\/(.+?)\.md$/);
     if (!pathMatch) continue;
 
     const [, courseSlug, moduleSlug, lessonSlug] = pathMatch;
-    const { frontmatter, content } = parseFrontmatter(rawContent);
-
+    
+    // In a truly scalable system, we'd only parse frontmatter here.
+    // For now, we'll store the path and metadata.
     const lesson: Lesson = {
       slug: lessonSlug!,
       path: `/courses/${courseSlug}/${moduleSlug}/${lessonSlug}`,
-      rawContent,
-      content,
-      frontmatter,
+      rawContent: '', // Empty initially
+      content: '',    // Empty initially
+      frontmatter: {
+        title: slugify(lessonSlug!), // Fallback
+        slug: lessonSlug!,
+        order: 0,
+        duration: '5 min',
+        tags: [],
+        description: '',
+        isPublished: true,
+      },
       moduleSlug: moduleSlug!,
       courseSlug: courseSlug!,
     };
@@ -262,6 +273,25 @@ export function buildSearchItems(tree: CourseTree): SearchItem[] {
     }
   }
   return items;
+}
+
+/* ─── Async Content Loader ─── */
+
+export async function getLessonContent(
+  courseSlug: string,
+  moduleSlug: string,
+  lessonSlug: string
+): Promise<{ frontmatter: LessonFrontmatter; content: string }> {
+  // Find the loader
+  const targetPath = `../../content/${courseSlug}/${moduleSlug}/${lessonSlug}.md`;
+  const loader = markdownLoaders[targetPath];
+
+  if (!loader) {
+    throw new Error(`Lesson not found: ${targetPath}`);
+  }
+
+  const raw = await loader();
+  return parseFrontmatter(raw);
 }
 
 /* ─── Singleton tree instance ─── */

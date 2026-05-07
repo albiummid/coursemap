@@ -11,6 +11,7 @@ import { AnimatePresence } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import SearchModal from '@/components/SearchModal';
 import LessonPage from '@/components/LessonPage';
+import LandingPage from '@/components/LandingPage';
 import NotFound from '@/components/NotFound';
 import AdminGuard from '@/components/AdminGuard';
 
@@ -94,7 +95,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomeRedirect />,
+        element: <LandingPage />,
       },
       {
         path: 'courses/:course/:module/:lesson',
