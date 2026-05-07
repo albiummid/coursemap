@@ -22,7 +22,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "courses/*": ["./repos/*"]
     }
   },
   "include": ["src", "vite-env.d.ts"]

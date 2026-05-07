@@ -4,13 +4,13 @@ import type { Course, CourseTree, Lesson, LessonFrontmatter, LessonNavigation, M
 
 // Lazy load markdown (heavy)
 const markdownLoaders: Record<string, () => Promise<string>> = import.meta.glob(
-  '../../content/**/*.md',
+  ['../../content/**/*.md', '../../repos/**/*.md'],
   { eager: false, query: '?raw', import: 'default' }
 ) as Record<string, () => Promise<string>>;
 
 // Eager load JSON (light metadata)
 const jsonFiles: Record<string, any> = import.meta.glob(
-  '../../content/**/*.json',
+  ['../../content/**/*.json', '../../repos/**/*.json'],
   { eager: true, import: 'default' }
 ) as Record<string, any>;
 
@@ -111,7 +111,7 @@ export function buildCourseTree(): CourseTree {
 
   // 1. Process course.json files
   for (const [filePath, data] of Object.entries(jsonFiles)) {
-    const courseMatch = filePath.match(/content\/(.+?)\/course\.json$/);
+    const courseMatch = filePath.match(/(?:content|repos)\/(.+?)\/course\.json$/);
     if (courseMatch) {
       const courseSlug = courseMatch[1]!;
       courseMap.set(courseSlug, {
@@ -126,7 +126,7 @@ export function buildCourseTree(): CourseTree {
 
   // 2. Process module.json files
   for (const [filePath, data] of Object.entries(jsonFiles)) {
-    const moduleMatch = filePath.match(/content\/(.+?)\/(.+?)\/module\.json$/);
+    const moduleMatch = filePath.match(/(?:content|repos)\/(.+?)\/(.+?)\/module\.json$/);
     if (moduleMatch) {
       const [, courseSlug, moduleSlug] = moduleMatch;
       const courseModules = moduleMap.get(courseSlug!);
@@ -143,7 +143,7 @@ export function buildCourseTree(): CourseTree {
 
   // 3. Process markdown files (metadata only)
   for (const filePath of Object.keys(markdownLoaders)) {
-    const pathMatch = filePath.match(/content\/(.+?)\/(.+?)\/(.+?)\.md$/);
+    const pathMatch = filePath.match(/(?:content|repos)\/(.+?)\/(.+?)\/(.+?)\.md$/);
     if (!pathMatch) continue;
 
     const [, courseSlug, moduleSlug, lessonSlug] = pathMatch;
@@ -283,11 +283,13 @@ export async function getLessonContent(
   lessonSlug: string
 ): Promise<{ frontmatter: LessonFrontmatter; content: string }> {
   // Find the loader
-  const targetPath = `../../content/${courseSlug}/${moduleSlug}/${lessonSlug}.md`;
-  const loader = markdownLoaders[targetPath];
+  const targetPathContent = `../../content/${courseSlug}/${moduleSlug}/${lessonSlug}.md`;
+  const targetPathRepos = `../../repos/${courseSlug}/${moduleSlug}/${lessonSlug}.md`;
+  
+  const loader = markdownLoaders[targetPathContent] || markdownLoaders[targetPathRepos];
 
   if (!loader) {
-    throw new Error(`Lesson not found: ${targetPath}`);
+    throw new Error(`Lesson not found: ${courseSlug}/${moduleSlug}/${lessonSlug}`);
   }
 
   const raw = await loader();

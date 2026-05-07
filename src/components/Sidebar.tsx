@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
@@ -8,6 +8,8 @@ import {
   Menu,
   X,
   Search,
+  ChevronsUpDown,
+  Book,
 } from 'lucide-react';
 import { getCourseTree } from '@/utils/contentLoader';
 import { useProgressStore } from '@/stores/useProgressStore';
@@ -191,11 +193,27 @@ function CourseSection({ course }: CourseSectionProps): ReactNode {
 
 export default function Sidebar({ onSearchOpen }: SidebarProps): ReactNode {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [courseDropdownOpen, setCourseDropdownOpen] = useState<boolean>(false);
+  const navigate = useNavigate();
   const tree = useMemo(() => getCourseTree(), []);
 
   const closeMobile = useCallback((): void => {
     setMobileOpen(false);
   }, []);
+
+  // Determine active course from URL
+  const { course: courseSlug } = useParams<{ course: string }>();
+  const activeCourse = useMemo(() => {
+    return tree.courses.find((c) => c.slug === courseSlug);
+  }, [tree.courses, courseSlug]);
+
+  const handleCourseSwitch = (slug: string) => {
+    const course = tree.courses.find(c => c.slug === slug);
+    if (course && course.modules[0]?.lessons[0]) {
+      navigate(course.modules[0].lessons[0].path);
+      setCourseDropdownOpen(false);
+    }
+  };
 
   // Close sidebar on navigation (mobile)
   const location = useLocation();
@@ -267,11 +285,56 @@ export default function Sidebar({ onSearchOpen }: SidebarProps): ReactNode {
           <kbd className="sidebar-kbd">⌘K</kbd>
         </button>
 
+        {/* Course Selector Dropdown */}
+        <div className="course-selector-container">
+          <button
+            type="button"
+            className={`course-selector-trigger ${courseDropdownOpen ? 'active' : ''}`}
+            onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
+          >
+            <Book size={16} className="text-amber-500" />
+            <span className="course-selector-label">
+              {activeCourse?.title || 'Select Course'}
+            </span>
+            <ChevronsUpDown size={14} className="ml-auto text-muted" />
+          </button>
+
+          <AnimatePresence>
+            {courseDropdownOpen && (
+              <motion.div
+                className="course-selector-dropdown"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {tree.courses.map((c) => (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    className={`course-selector-item ${c.slug === courseSlug ? 'active' : ''}`}
+                    onClick={() => handleCourseSwitch(c.slug)}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="course-item-title">{c.title}</span>
+                      <span className="course-item-meta">{c.language} · {c.totalModules} modules</span>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Course tree */}
         <div className="sidebar-content">
-          {tree.courses.map((course) => (
-            <CourseSection key={course.slug} course={course} />
-          ))}
+          {activeCourse ? (
+            <CourseSection course={activeCourse} />
+          ) : (
+            <div className="sidebar-empty">
+              <p>Select a course to see content</p>
+            </div>
+          )}
         </div>
       </aside>
     </>
