@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 /* ═══════════════════════════════════════════════════
    COURSEMAP — Dark-First Editorial Design System
    Deep slate backgrounds, warm amber accents,
@@ -37,7 +35,7 @@
   font-display: swap;
 }
 
-/* ─── CSS Custom Properties ─── */
+/* ─── CSS Custom Properties (Dark Theme Default) ─── */
 :root {
   /* Fonts */
   --font-heading: "Geist", system-ui, -apple-system, sans-serif;
@@ -48,9 +46,43 @@
   --sidebar-width: 300px;
   --toc-width: 220px;
   --header-height: 3px;
+
+  /* Colors (Dark Theme) */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-tertiary: #1a1a24;
+  --bg-elevated: #1e1e2a;
+  --bg-hover: #252535;
+  --bg-active: #2a2a3d;
+
+  --border-primary: #2a2a3d;
+  --border-secondary: #1e1e2a;
+  --border-accent: #f59e0b33;
+
+  --text-primary: #f0f0f5;
+  --text-secondary: #c0c0d8; /* Brightened for better contrast */
+  --text-tertiary: #8a8a9e;
+  --text-muted: #5a5a70;
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-glow: #f59e0b22;
+  --accent-muted: #f59e0b15;
+
+  --success: #34d399;
+  --success-bg: #34d39915;
+
+  --code-bg: #0d0d14;
+  --code-header: #141420;
+
+  --scrollbar-track: #111118;
+  --scrollbar-thumb: #2a2a3d;
+  --scrollbar-thumb-hover: #3a3a50;
+
+  color-scheme: dark;
 }
 
-/* ─── Dark Theme (Default) ─── */
+/* ─── Dark Theme Class (Redundant but safe) ─── */
 .dark {
   --bg-primary: #0a0a0f;
   --bg-secondary: #111118;
@@ -64,9 +96,9 @@
   --border-accent: #f59e0b33;
 
   --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b8;
-  --text-tertiary: #6b6b82;
-  --text-muted: #4a4a60;
+  --text-secondary: #c0c0d8;
+  --text-tertiary: #8a8a9e;
+  --text-muted: #5a5a70;
 
   --accent: #f59e0b;
   --accent-hover: #fbbf24;
@@ -122,44 +154,6 @@
   color-scheme: light;
 }
 
-/* ─── Base Reset ─── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  font-family: var(--font-body);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.7;
-  min-height: 100vh;
-  overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* ─── Custom Scrollbar ─── */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
 
 /* ═══════════════════════════════════════
    SCROLL PROGRESS BAR
@@ -196,6 +190,10 @@ body {
   margin-left: var(--sidebar-width);
   min-height: 100vh;
   transition: margin-left 0.3s ease;
+}
+
+.app-main-landing {
+  margin-left: 0 !important;
 }
 
 @media (max-width: 768px) {
@@ -2305,351 +2303,6 @@ body {
   margin-top: 20px;
 }
 
-/* ═══════════════════════════════════════
-   LANDING PAGE STYLES
-   ═══════════════════════════════════════ */
-
-.landing-page {
-  background: var(--bg-primary);
-  min-height: 100vh;
-  overflow-x: hidden;
-  color: var(--text-primary);
-  transition: background 0.3s ease;
-}
-
-.hero-section {
-  position: relative;
-  padding: 120px 24px 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  overflow: hidden;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 10;
-  max-width: 800px;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: var(--accent-muted);
-  border: 1px solid var(--border-accent);
-  border-radius: 100px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 24px;
-}
-
-.hero-title {
-  font-family: var(--font-heading);
-  font-size: clamp(40px, 8vw, 72px);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -2px;
-  margin-bottom: 24px;
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, var(--accent), #fbbf24);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-  font-size: clamp(18px, 2vw, 22px);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 40px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--accent);
-  color: white;
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 20px var(--accent-glow);
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px var(--accent-glow);
-}
-
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  border: 1px solid var(--border-primary);
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--bg-hover);
-  border-color: var(--text-muted);
-}
-
-/* Hero Visuals */
-.hero-visual {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
-}
-
-.orb-1 {
-  width: 400px;
-  height: 400px;
-  background: var(--accent);
-  top: -100px;
-  right: -50px;
-  animation: float 20s infinite alternate;
-}
-
-.orb-2 {
-  width: 300px;
-  height: 300px;
-  background: #6366f1;
-  bottom: 100px;
-  left: -50px;
-  animation: float 15s infinite alternate-reverse;
-}
-
-@keyframes float {
-  from { transform: translate(0, 0); }
-  to { transform: translate(40px, 60px); }
-}
-
-/* Features Section */
-.features-section {
-  padding: 80px 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
-
-.section-title {
-  font-family: var(--font-heading);
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.section-subtitle {
-  color: var(--text-secondary);
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.feature-card {
-  padding: 32px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 20px;
-  transition: all 0.3s ease;
-}
-
-.feature-card:hover {
-  border-color: var(--accent);
-  background: var(--bg-tertiary);
-  transform: translateY(-4px);
-}
-
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--accent-muted);
-  color: var(--accent);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  margin-bottom: 12px;
-  font-size: 20px;
-}
-
-.feature-card p {
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* Courses Grid */
-.courses-section {
-  padding: 80px 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.courses-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 24px;
-}
-
-.course-card {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-.course-card-content {
-  padding: 32px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 24px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.course-card:hover .course-card-content {
-  border-color: var(--accent);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  transform: scale(1.02);
-}
-
-.course-card-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--accent), #fbbf24);
-  color: white;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
-.course-card h3 {
-  font-size: 24px;
-  margin-bottom: 12px;
-}
-
-.course-card p {
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-  flex: 1;
-}
-
-.course-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-secondary);
-}
-
-.course-tag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  background: var(--bg-tertiary);
-  border-radius: 6px;
-  color: var(--text-tertiary);
-}
-
-.course-modules-count {
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-/* Footer */
-.landing-footer {
-  padding: 80px 24px 40px;
-  border-top: 1px solid var(--border-primary);
-  margin-top: 80px;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 24px;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  font-size: 20px;
-}
-
-.footer-content p {
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 80px 20px 40px;
-  }
-  .hero-actions {
-    flex-direction: column;
-  }
-  .btn-primary, .btn-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-}
 
 /* ═══════════════════════════════════════
    SKELETON LOADING

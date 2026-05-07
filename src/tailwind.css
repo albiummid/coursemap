@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@source "./**/*.{ts,tsx,html}";
+
+@theme {
+  /* Fonts */
+  --font-heading: "Geist", system-ui, -apple-system, sans-serif;
+  --font-body: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Colors mapped from CSS variables */
+  --color-primary: var(--bg-primary);
+  --color-secondary: var(--bg-secondary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+}
+
+/* Base resets that play nice with Tailwind preflight */
+@layer base {
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+}

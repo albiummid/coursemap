@@ -4,6 +4,7 @@ import {
   RouterProvider,
   Outlet,
   Navigate,
+  useLocation,
 } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
@@ -36,6 +37,8 @@ import { getCourseTree } from '@/utils/contentLoader';
 
 function Layout(): ReactNode {
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
 
   const openSearch = useCallback((): void => setSearchOpen(true), []);
   const closeSearch = useCallback((): void => setSearchOpen(false), []);
@@ -54,8 +57,8 @@ function Layout(): ReactNode {
 
   return (
     <div className="app-layout">
-      <Sidebar onSearchOpen={openSearch} />
-      <main className="app-main">
+      {!isLanding && <Sidebar onSearchOpen={openSearch} />}
+      <main className={`app-main ${isLanding ? 'app-main-landing' : ''}`}>
         <AnimatePresence mode="wait">
           <Outlet />
         </AnimatePresence>
